@@ -28,8 +28,7 @@ Python语言 、Tensorﬂow框架 、Docker 、Pycharm等开发工具。
             1. 先读本地缓存，本地未命中，查询Redis；
             2. 读取Redis，未命中查询数据库并回填Redis（长TTL）；
             3. 回填本地缓存(短TTL)  
-<br>
-        
+  
     - Redis分布式缓存：![alt text](image-9.png)
         - Nginx负载均衡
         - ![alt text](image-10.png)
@@ -70,16 +69,20 @@ Python语言 、Tensorﬂow框架 、Docker 、Pycharm等开发工具。
                 - `REPLICA`优先从，
                 - `REPLICA_PREFERRED`从不可用读master
 
-        - 分片集群(Redis Cluster) ：部署多台Redis主节点master，节点间平等无主从之分，同时对外提供读/写服务。缓存的数据库均分再这些Redis实例上，客户端的请求通过路由规则转发到目标master上
+        - 分片集群(Redis Cluster) ：部署多台Redis主节点master，节点间平等无主从之分，同时对外提供读/写服务。缓存的数据库均分再这些Redis实例上，客户端的请求通过路由规则转发到目标master上 **（各节点间基于Gossip通信）**，每个master为保证高可用，可以通过主从复制配置一个或多个从节点slave。**内置Sentinel机制**
 
             - 散列插槽：16384个插槽分配到不同的实例，key的有效部分求哈希
 
-            - 集群伸缩：`add-node`：添加节点到集群，默认master， `reshard`重新分配插槽
+            - 集群伸缩：动态扩容和缩容
+                - `add-node`：添加节点到集群，默认master， 
+                - `reshard`重新分配插槽
             - 数据迁移： `cluster failover`命令可以手动让集群中的某个master宕机，切换到执行cluster failover命令的这个slave：
                 - force：省略offset一致性校验
                 - takeover：直接标记自己为master，广播故障转移的结果，忽略master状态，忽略数据一致性
+                ![alt text](image-12.png)
+            - 基于Gossip协议通信![alt text](image-13.png)
             - RedisTemplate访问分片集群:     
-<br>
+
 2. 针对审批流程状态：采用 RabbitMQ 实现消息队列，异步处理审批结果通知，使用ACK机制保证消息可靠性；
     ![alt text](image.png)
     - 耦合度低，拓展性强
